@@ -11,6 +11,12 @@ public class CustomMeshMaker : MonoBehaviour
     Vector3[] vertices;
     int[] triangles;
 
+    Vector3[] TMPVertices;
+    int[] TMPIndices;
+
+    int AddedIndices;
+    int AddedVertices;
+
     public float CellSize;
     public Vector3 Offset;
     public int gridSize;
@@ -18,13 +24,21 @@ public class CustomMeshMaker : MonoBehaviour
     private void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
+
     }
 
     private void Start()
     {
-        //StructPixel();
-        DoubleTriangles();
+        StructPixel();
         CreateMesh();
+    }
+
+    public void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.Home) == true)
+        {
+            DoubleTriangles();
+        }
     }
 
     void StructPixel()
@@ -74,39 +88,78 @@ public class CustomMeshMaker : MonoBehaviour
     }
     void DoubleTriangles()
     {
-        vertices = new Vector3[6];
-        triangles = new int[12];
+        TMPVertices = new Vector3[triangles.Length * 2];
+        TMPIndices = new int[TMPVertices.Length*2];
+
+        TMPVertices[0] = vertices[0];
+        TMPVertices[1] = vertices[1];
+        TMPVertices[2] = vertices[2];
+
+        Vector3[] TMPHolder = new Vector3[6];
+        int v = 0;
+
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+
+            Vector3[] NewCorners = new Vector3[3];
+            Vector3[] OldVerts = new Vector3[3];
+
+            Vector3[] NewV = fetchnewvertices(i);
+
+            OldVerts[0] = new Vector3(NewV[0].x, NewV[0].y, NewV[0].z);
+            OldVerts[1] = new Vector3(NewV[1].x, NewV[1].y, NewV[1].z);
+            OldVerts[2] = new Vector3(NewV[2].x, NewV[2].y, NewV[2].z);
+
+            OldVerts = CorrectOrder(OldVerts);
+            TMPVertices[AddedVertices] = OldVerts[0];
+
+            NewCorners[0] = new Vector3((OldVerts[0].x + OldVerts[1].x) / 2, (OldVerts[0].y + OldVerts[1].y) / 2, (OldVerts[0].z + OldVerts[1].z) / 2);
+            NewCorners[1] = new Vector3((OldVerts[1].x + OldVerts[2].x) / 2, (OldVerts[1].y + OldVerts[2].y) / 2, (OldVerts[1].z + OldVerts[2].z) / 2);
+            NewCorners[2] = new Vector3((OldVerts[2].x + OldVerts[0].x) / 2, (OldVerts[2].y + OldVerts[0].y) / 2, (OldVerts[2].z + OldVerts[0].z) / 2);
+
+
+            TMPHolder[0] = OldVerts[0];
+            TMPHolder[1] = OldVerts[1];
+            TMPHolder[2] = OldVerts[2];
+            TMPHolder[3] = NewCorners[0];
+            TMPHolder[4] = NewCorners[2];
+            TMPHolder[5] = NewCorners[1];
+
+            for(int o = 0; o < 5; o++)
+            {
+                TMPVertices[o + AddedVertices+1] = TMPHolder[o+1];
+            }
+
+            TMPIndices[0+v] = 5 + AddedIndices; TMPIndices[3+v] = 5 + AddedIndices; TMPIndices[6+v] = 5 + AddedIndices; TMPIndices[9+v] = 5 + AddedIndices;
+            TMPIndices[1+v] = 0 + AddedIndices; TMPIndices[4+v] = 3 + AddedIndices; TMPIndices[7+v] = 4 + AddedIndices; TMPIndices[10+v] = 2 + AddedIndices;
+            TMPIndices[2+v] = 3 + AddedIndices; TMPIndices[5+v] = 1 + AddedIndices; TMPIndices[8+v] = 0 + AddedIndices; TMPIndices[11+v] = 4 + AddedIndices;
+
+            AddedVertices += 6;
+            AddedIndices += 6;
+            v += 12;
+        }
+        triangles = TMPIndices;
+        vertices = TMPVertices;
+        AddedIndices = 0;
+        AddedVertices = 0;
+    }   
+    Vector3[] fetchnewvertices(int at)
+    {
+        int[] indices = new int[3];
         
-        Vector3[] NewCorners = new Vector3[3];
-        Vector3[] OldVerts = new Vector3[3];
+        for(int i = 0 + at; i < 3 + at; i++)
+        {
+            indices[i-at] = triangles[i];
+        }
 
-        vertices[0] = new Vector3(-1, -1);
-        vertices[1] = new Vector3(-1, 1);
-        vertices[2] = new Vector3(1, -1);
-
-
-        OldVerts[0] = new Vector3(vertices[0].x, vertices[0].y,vertices[0].z);
-        OldVerts[1] = new Vector3(vertices[1].x, vertices[1].y,vertices[1].z);
-        OldVerts[2] = new Vector3(vertices[2].x, vertices[2].y,vertices[2].z);
-
-        OldVerts = CorrectOrder(vertices);
-        
-        NewCorners[0] = new Vector3((OldVerts[0].x + OldVerts[1].x) / 2, (OldVerts[0].y + OldVerts[1].y) / 2,(OldVerts[0].z + OldVerts[1].z)/2);
-        NewCorners[1] = new Vector3((OldVerts[1].x + OldVerts[2].x) / 2, (OldVerts[1].y + OldVerts[2].y) / 2,(OldVerts[1].z + OldVerts[2].z)/2);
-        NewCorners[2] = new Vector3((OldVerts[2].x + OldVerts[0].x) / 2, (OldVerts[2].y + OldVerts[0].y) / 2,(OldVerts[2].z + OldVerts[0].z)/2);
-
-
-        vertices[0] = OldVerts[0];
-        vertices[1] = NewCorners[0];
-        vertices[2] = NewCorners[1];
-        vertices[3] = OldVerts[1];
-        vertices[4] = NewCorners[2];
-        vertices[5] = OldVerts[2];
-
-        triangles[0] = 2; triangles[3] = 2; triangles[6] = 2; triangles[9] =  2;
-        triangles[1] = 0; triangles[4] = 1; triangles[7] = 4; triangles[10] = 5;
-        triangles[2] = 1; triangles[5] = 3; triangles[8] = 0; triangles[11] = 4;
+        Vector3[] NewVertices = new Vector3[3];
+        for (int i = 0; i < 3;  i++)
+        {
+            NewVertices[i] = vertices[indices[i]];
+        }
+        return NewVertices;
     }
+
     Vector3[] CorrectOrder(Vector3[] Vertices)
     {
         Vector3[] NewOrder = new Vector3[3];

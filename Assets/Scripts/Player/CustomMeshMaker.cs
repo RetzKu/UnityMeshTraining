@@ -38,6 +38,8 @@ public class CustomMeshMaker : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.Home) == true)
         {
             DoubleTriangles();
+            OptimizeMesh();
+            CreateMesh();
         }
     }
 
@@ -204,5 +206,42 @@ public class CustomMeshMaker : MonoBehaviour
         }
 
         return NewOrder;
+    }
+
+    void OptimizeMesh()
+    {
+        int RMVerts = 0;
+        List<Vector3> optimizedlist = new List<Vector3>();
+        List<int> optimizedIndicesList = new List<int>();
+
+        optimizedlist.Add(vertices[0]);
+        optimizedIndicesList.Add(triangles[0]);
+        optimizedIndicesList.Add(triangles[1]);
+        optimizedIndicesList.Add(triangles[2]);
+
+        for(int i = 1; i < vertices.Length; i++)
+        {
+            bool wasfound = false;
+
+            /*Checking if this vertice is already declared*/
+            Vector3 Host = vertices[i];
+
+            //Going through list again -1 where we are
+            for(int o = 0; o < (vertices.Length+i) - vertices.Length; o++)
+            {
+                //if host == previously declared vertice
+                if(Host.x == vertices[o].x && Host.y == vertices[o].y)
+                {
+
+                    wasfound = true;
+                    RMVerts++;
+                }
+            }
+            if(!wasfound)
+            {
+                optimizedlist.Add(Host);
+            }
+        }
+        print(RMVerts + " Verticejä poistettu");
     }
 }

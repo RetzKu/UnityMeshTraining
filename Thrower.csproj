@@ -13,11 +13,13 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile></CompilerResponseFile>
+    <CompilerResponseFile>
+    </CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows64:19</UnityBuildTarget>
     <UnityVersion>2017.4.0f1</UnityVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <LangVersion>4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -246,6 +248,7 @@
     <Compile Include="Assets\Scripts\MeshSplitting\SplitterMath\Plane.cs" />
     <Compile Include="Assets\Scripts\MeshSplitting\SplitterMath\SplitterMath.cs" />
     <Compile Include="Assets\Scripts\MeshSplitting\Splitters\Splitter.cs" />
+    <Compile Include="Assets\Scripts\MeshSplitting\Splitters\Splitter2D.cs" />
     <Compile Include="Assets\Scripts\MeshSplitting\Splitters\SplitterSingleCut.cs" />
     <Compile Include="Assets\Scripts\Player\CustomMeshMaker.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerScript.cs" />

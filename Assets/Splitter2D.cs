@@ -32,6 +32,13 @@ namespace MeshSplitting.Splitters
                     CreatePlane(ImpactPoint, PushForce);
                     */
                     SplitObject(splitable, other.gameObject);
+                    PolygonCollider2D lmao = new PolygonCollider2D();
+                    lmao.points = new Vector2[4];
+                    lmao.points[0] = new Vector2 ( 2, 2 );
+                    lmao.points[0] = new Vector2(1, 2);
+                    lmao.points[0] = new Vector2(2, 1);
+                    lmao.points[0] = new Vector2(1, 1);
+
                     break;
                 }
             }

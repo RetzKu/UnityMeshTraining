@@ -220,6 +220,10 @@ namespace MeshSplitting.Splitables
 
                 PostProcessObject(newGOs[i]);
             }
+            foreach(GameObject newobj in newGOs)
+            {
+                newobj.GetComponentInChildren<Dynamic2DCollider>().UpdateCollider();
+            }
         }
 
         private void UpdateMeshesInChildren(int i, GameObject go)

@@ -95,6 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Dynamic2DCollider.cs" />
+    <Compile Include="Assets\Fragile.cs" />
     <Compile Include="Assets\Scripts\MeshSplitting\CustomSplitters\ImpactSplitter.cs" />
     <Compile Include="Assets\Scripts\MeshSplitting\Examples\CameraLineSplitter.cs" />
     <Compile Include="Assets\Scripts\MeshSplitting\Examples\MobileLineSplitter.cs" />

@@ -14,6 +14,7 @@ namespace MeshSplitting.Splitables
 #endif
 
         public GameObject OptionalTargetObject;
+        public bool Fragile;
         public bool Convex = false;
         public float SplitForce = 0f;
 
@@ -36,96 +37,135 @@ namespace MeshSplitting.Splitables
         private bool _isSplitting = false;
         private bool _splitMesh = false;
 
-        private void Awake()
+        private void Start()
         {
             _transform = GetComponent<Transform>();
+            if(Fragile)
+            {
+                gameObject.AddComponent<Fragile>();
+            }
         }
 
         private void Update()
         {
-            if (_splitMesh)
+            //    if (_splitMesh)
+            //    {
+            //        _splitMesh = false;
+
+            //        bool anySplit = false;
+
+            //        for (int i = 0; i < _meshContainerStatic.Length; i++)
+            //        {
+            //            _meshContainerStatic[i].MeshInitialize();
+            //            _meshContainerStatic[i].CalculateWorldSpace();
+
+            //            // split mesh
+            //            _meshSplitterStatic[i].MeshSplit();
+
+            //            if (_meshContainerStatic[i].IsMeshSplit())
+            //            {
+            //                anySplit = true;
+            //                if (CreateCap) _meshSplitterStatic[i].MeshCreateCaps();
+            //            }
+            //        }
+
+            //        for (int i = 0; i < _meshContainerSkinned.Length; i++)
+            //        {
+            //            _meshContainerSkinned[i].MeshInitialize();
+            //            _meshContainerSkinned[i].CalculateWorldSpace();
+
+            //            // split mesh
+            //            _meshSplitterSkinned[i].MeshSplit();
+
+            //            if (_meshContainerSkinned[i].IsMeshSplit())
+            //            {
+            //                anySplit = true;
+            //                if (CreateCap) _meshSplitterSkinned[i].MeshCreateCaps();
+            //            }
+            //        }
+
+            //        if (anySplit) CreateNewObjects();
+            //        _isSplitting = false;
+            //    }
+        }
+
+        private void CustomSplit()
+        {
+            bool anySplit = false;
+            for (int i = 0; i < _meshContainerStatic.Length; i++)
             {
-                _splitMesh = false;
+                _meshContainerStatic[i].MeshInitialize();
+                _meshContainerStatic[i].CalculateWorldSpace();
 
-                bool anySplit = false;
+                // split mesh
+                _meshSplitterStatic[i].MeshSplit();
 
-                for (int i = 0; i < _meshContainerStatic.Length; i++)
+                if (_meshContainerStatic[i].IsMeshSplit())
                 {
-                    _meshContainerStatic[i].MeshInitialize();
-                    _meshContainerStatic[i].CalculateWorldSpace();
-
-                    // split mesh
-                    _meshSplitterStatic[i].MeshSplit();
-
-                    if (_meshContainerStatic[i].IsMeshSplit())
-                    {
-                        anySplit = true;
-                        if (CreateCap) _meshSplitterStatic[i].MeshCreateCaps();
-                    }
+                    anySplit = true;
+                    if (CreateCap) _meshSplitterStatic[i].MeshCreateCaps();
                 }
-
-                for (int i = 0; i < _meshContainerSkinned.Length; i++)
-                {
-                    _meshContainerSkinned[i].MeshInitialize();
-                    _meshContainerSkinned[i].CalculateWorldSpace();
-
-                    // split mesh
-                    _meshSplitterSkinned[i].MeshSplit();
-
-                    if (_meshContainerSkinned[i].IsMeshSplit())
-                    {
-                        anySplit = true;
-                        if (CreateCap) _meshSplitterSkinned[i].MeshCreateCaps();
-                    }
-                }
-
-                if (anySplit) CreateNewObjects();
-                _isSplitting = false;
             }
+
+            for (int i = 0; i < _meshContainerSkinned.Length; i++)
+            {
+                _meshContainerSkinned[i].MeshInitialize();
+                _meshContainerSkinned[i].CalculateWorldSpace();
+
+                // split mesh
+                _meshSplitterSkinned[i].MeshSplit();
+
+                if (_meshContainerSkinned[i].IsMeshSplit())
+                {
+                    anySplit = true;
+                    if (CreateCap) _meshSplitterSkinned[i].MeshCreateCaps();
+                }
+            }
+
+            if (anySplit) CreateNewObjects();
+            _isSplitting = false;
         }
 
         public void Split(Transform splitTransform)
         {
-            if (!_isSplitting)
+            _isSplitting = _splitMesh = true;
+            _splitPlane = new PlaneMath(splitTransform);
+
+            MeshFilter[] meshFilters = GetComponentsInChildren<MeshFilter>();
+            SkinnedMeshRenderer[] skinnedRenderes = GetComponentsInChildren<SkinnedMeshRenderer>();
+
+            _meshContainerStatic = new MeshContainer[meshFilters.Length];
+            _meshSplitterStatic = new IMeshSplitter[meshFilters.Length];
+
+            for (int i = 0; i < meshFilters.Length; i++)
             {
-                _isSplitting = _splitMesh = true;
-                _splitPlane = new PlaneMath(splitTransform);
+                _meshContainerStatic[i] = new MeshContainer(meshFilters[i]);
 
-                MeshFilter[] meshFilters = GetComponentsInChildren<MeshFilter>();
-                SkinnedMeshRenderer[] skinnedRenderes = GetComponentsInChildren<SkinnedMeshRenderer>();
+                _meshSplitterStatic[i] = Convex ? (IMeshSplitter)new MeshSplitterConvex(_meshContainerStatic[i], _splitPlane, splitTransform.rotation) :
+                                                  (IMeshSplitter)new MeshSplitterConcave(_meshContainerStatic[i], _splitPlane, splitTransform.rotation);
 
-                _meshContainerStatic = new MeshContainer[meshFilters.Length];
-                _meshSplitterStatic = new IMeshSplitter[meshFilters.Length];
-
-                for (int i = 0; i < meshFilters.Length; i++)
-                {
-                    _meshContainerStatic[i] = new MeshContainer(meshFilters[i]);
-
-                    _meshSplitterStatic[i] = Convex ? (IMeshSplitter)new MeshSplitterConvex(_meshContainerStatic[i], _splitPlane, splitTransform.rotation) :
-                                                      (IMeshSplitter)new MeshSplitterConcave(_meshContainerStatic[i], _splitPlane, splitTransform.rotation);
-
-                    if (UseCapUV) _meshSplitterStatic[i].SetCapUV(UseCapUV, CustomUV, CapUVMin, CapUVMax);
+                if (UseCapUV) _meshSplitterStatic[i].SetCapUV(UseCapUV, CustomUV, CapUVMin, CapUVMax);
 #if UNITY_EDITOR
-                    _meshSplitterStatic[i].DebugDraw(ShowDebug);
+                _meshSplitterStatic[i].DebugDraw(ShowDebug);
 #endif
-                }
-
-                _meshSplitterSkinned = new IMeshSplitter[skinnedRenderes.Length];
-                _meshContainerSkinned = new MeshContainer[skinnedRenderes.Length];
-
-                for (int i = 0; i < skinnedRenderes.Length; i++)
-                {
-                    _meshContainerSkinned[i] = new MeshContainer(skinnedRenderes[i]);
-
-                    _meshSplitterSkinned[i] = Convex ? (IMeshSplitter)new MeshSplitterConvex(_meshContainerSkinned[i], _splitPlane, splitTransform.rotation) :
-                                                      (IMeshSplitter)new MeshSplitterConcave(_meshContainerSkinned[i], _splitPlane, splitTransform.rotation);
-
-                    if (UseCapUV) _meshSplitterSkinned[i].SetCapUV(UseCapUV, CustomUV, CapUVMin, CapUVMax);
-#if UNITY_EDITOR
-                    _meshSplitterSkinned[i].DebugDraw(ShowDebug);
-#endif
-                }
             }
+
+            _meshSplitterSkinned = new IMeshSplitter[skinnedRenderes.Length];
+            _meshContainerSkinned = new MeshContainer[skinnedRenderes.Length];
+
+            for (int i = 0; i < skinnedRenderes.Length; i++)
+            {
+                _meshContainerSkinned[i] = new MeshContainer(skinnedRenderes[i]);
+
+                _meshSplitterSkinned[i] = Convex ? (IMeshSplitter)new MeshSplitterConvex(_meshContainerSkinned[i], _splitPlane, splitTransform.rotation) :
+                                                  (IMeshSplitter)new MeshSplitterConcave(_meshContainerSkinned[i], _splitPlane, splitTransform.rotation);
+
+                if (UseCapUV) _meshSplitterSkinned[i].SetCapUV(UseCapUV, CustomUV, CapUVMin, CapUVMax);
+#if UNITY_EDITOR
+                _meshSplitterSkinned[i].DebugDraw(ShowDebug);
+#endif
+            }
+            CustomSplit();
         }
 
         private void CreateNewObjects()
@@ -219,10 +259,6 @@ namespace MeshSplitting.Splitables
                 }
 
                 PostProcessObject(newGOs[i]);
-            }
-            foreach(GameObject newobj in newGOs)
-            {
-                newobj.GetComponentInChildren<Dynamic2DCollider>().UpdateCollider();
             }
         }
 

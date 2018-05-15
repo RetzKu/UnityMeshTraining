@@ -2,42 +2,63 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(PolygonCollider2D))]
+[RequireComponent(typeof(Rigidbody2D))]
 public class Dynamic2DCollider : MonoBehaviour {
 
-    public List<PolygonCollider2D>dynamicCollider;
     public GameObject parentTransform;
-	// Use this for initialization
-	void Start ()
+    public PolygonCollider2D poly;
+    private Mesh parentMesh;
+    private MeshCollider parentCollider;
+
+    void Start ()
     {
         parentTransform = transform.parent.gameObject;
-        transform.rotation = new Quaternion(-90, 0, 0, 0);
-        UpdateCollider();
+        //UpdateCollider();
+        InitSplit();
+        poly = transform.GetComponent<PolygonCollider2D>();
+        transform.GetComponent<Rigidbody2D>().gravityScale = 0;
+        poly.isTrigger = true; 
 	}
 	
-	// Update is called once per frame
 	void Update ()
     {
-	    	
+        UpdateCollider();
+        if(Input.GetKeyDown(KeyCode.A) == true) //Debug checki jos jokin hajoaa;
+        {
+        }
 	}
 
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        parentTransform.transform.SetParent(transform);
+        transform.GetComponent<Rigidbody2D>().gravityScale = 1;
+    }
+
+    public void InitSplit()
+    {
+        parentTransform.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationX |RigidbodyConstraints.FreezeRotationZ;
+        StartCoroutine(WaitForCreation());
+        parentTransform.GetComponent<MeshCollider>().convex = true; 
+        transform.position = Vector3.zero;
+    }
+    private IEnumerator WaitForCreation()
+    {
+        yield return new WaitForFixedUpdate();
+        poly = transform.GetComponent<PolygonCollider2D>();
+        transform.localPosition = new Vector3(0, 0, 0);
+        transform.localScale = new Vector3(1, 1, 1);
+        transform.Rotate(180, 0, 0);
+    }
     public void UpdateCollider()
     {
-        PolygonCollider2D polCollider;
-        PolygonCollider2D og = transform.GetComponent<PolygonCollider2D>();
-        if(og != null)
+        if(poly == null)
         {
-            polCollider = og;
+            poly = transform.GetComponent<PolygonCollider2D>();
         }
-        else
-        {
-            polCollider = gameObject.AddComponent<PolygonCollider2D>();
-        }
-        dynamicCollider.Add(polCollider);
-
         MeshCollider meshData = parentTransform.GetComponent<MeshCollider>();
         Vector2[] newpoints = GetLimits(meshData.sharedMesh.vertices);
-
-        polCollider.SetPath(0, newpoints);
+        poly.SetPath(0, newpoints);
     }
 
     Vector2[] GetLimits(Vector3[] points)
